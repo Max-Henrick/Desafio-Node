@@ -6,6 +6,9 @@ const port = 3000
 const app = express()
 app.use(express.json())
 
+
+const listOrder = []
+
 //MIDDLEWARE - conferencia de pedidos
 const checkUserId = (request, response, next) => {
     const { id } = request.params
@@ -22,24 +25,69 @@ const checkUserId = (request, response, next) => {
     next()
 }
 
-const listOrder = []
+const checkMethodOrUrl = (request, response, next) => {
+    const method = request.method
+    const url = request.url
+
+    request.methodPage = method
+    request.urlPage = url
+
+    next()
+}
 
 // Criação de pedidos
-app.post('/order', (request, response) => {
+app.post('/order', checkMethodOrUrl, (request, response) => {
     const { order, clientName, price } = request.body
     const status = 'Em preparação'
     const statusOrder = { id: uuid.v4(), order, clientName, price, status }
     listOrder.push(statusOrder)
+
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
+
     return response.status(201).json(statusOrder)
 })
 
-// Consulta pedidos
-app.get('/order', (request, response) => {
+// Consulta todos os pedidos
+app.get('/order', checkMethodOrUrl, (request, response) => {
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
     return response.json(listOrder)
+
+})
+
+// Consulta apenas o pedido selecionado
+app.get('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
+    const id = request.userId
+
+    const listId = listOrder.map(statusId => {
+        if (statusId.id === id) {
+            let consultId = {
+                id: statusId.id,
+                order: statusId.order,
+                clientName: statusId.clientName,
+                price: statusId.price,
+                status: statusId.status
+            }
+            return consultId
+        }
+    })
+
+    //Relacionado ao MIDDLEWARE que verifica 
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
+
+    return response.json(listId)
 })
 
 //Alteração de pedidos
-app.put('/order/:id', checkUserId, (request, response) => {
+app.put('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
     const { order, clientName, price, status } = request.body
     const position = request.userPosition
     const id = request.userId
@@ -48,22 +96,61 @@ app.put('/order/:id', checkUserId, (request, response) => {
 
     listOrder[position] = updateOrder
 
+    //Relacionado ao MIDDLEWARE que verifica 
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
+
     return response.json(updateOrder)
 })
 
-app.patch('/order/:id', checkUserId, (request, response) => {
-    const { order, clientName, price, status } = request.body
+// Deleta um pedido
+app.delete('/users/:id', checkUserId, checkMethodOrUrl, (request, response) => {
+    const position = request.userPosition
+
+    listOrder.splice(position, 1)
+
+    //Relacionado ao MIDDLEWARE que verifica 
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
+
+    return response.status(204)
+})
+
+//Adiciona status para pronto ou encerrado
+app.patch('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
     const position = request.userPosition
     const id = request.userId
 
-    const statusOrder = status = 'Pronto'
+    const changeStatus = listOrder.map(stats => {
 
-    const updateStatus = { id, order, clientName, price, statusOrder }
+        if (stats.id === id) {
+            let newStatusOrder = {
+                id: stats.id,
+                order: stats.order,
+                clientName: stats.clientName,
+                price: stats.price,
+                status: stats.status === "Em preparação" ? "Pronto" : "Encerrado"
+            }
+            return newStatusOrder
+        }
+    })
 
-    listOrder[position] = updateStatus
+    listOrder[position] = changeStatus
 
-    return response.json(updateStatus)
+    //Relacionado ao MIDDLEWARE que verifica 
+    const url = request.urlPage
+    const method = request.methodPage
+
+    console.log(`[${method}] - ${url}`)
+
+    return response.json(changeStatus)
 })
+
+
 
 
 
