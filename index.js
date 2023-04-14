@@ -1,18 +1,19 @@
 const { request, response } = require('express')
 const express = require('express')
+const cors = require('cors')
 const uuid = require('uuid')
 
-const port = 3000
+const port = 3001
 const app = express()
 app.use(express.json())
-
+app.use(cors())
 
 const listOrder = []
 
 //MIDDLEWARE - conferencia de pedidos
 const checkUserId = (request, response, next) => {
     const { id } = request.params
-    const position = listOrder.findIndex(user => user.id === id)
+    const position = listOrder.findIndex(order => order.id === id)
 
     if (position < 0) {
         return response.status(404).json({ menssage: "Usuário não encontrado" })
