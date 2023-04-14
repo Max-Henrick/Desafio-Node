@@ -21,7 +21,7 @@ const checkUserId = (request, response, next) => {
 
 
     request.userPosition = position
-    request.userId = id
+    request.orderId = id
 
     next()
 }
@@ -63,7 +63,7 @@ app.get('/order', checkMethodOrUrl, (request, response) => {
 
 // Consulta apenas o pedido selecionado
 app.get('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
-    const id = request.userId
+    const id = request.orderId
 
     const listId = listOrder.map(statusId => {
         if (statusId.id === id) {
@@ -91,7 +91,7 @@ app.get('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
 app.put('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
     const { order, clientName, price, status } = request.body
     const position = request.userPosition
-    const id = request.userId
+    const id = request.orderId
 
     const updateOrder = { id, order, clientName, price, status }
 
@@ -107,7 +107,7 @@ app.put('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
 })
 
 // Deleta um pedido
-app.delete('/users/:id', checkUserId, checkMethodOrUrl, (request, response) => {
+app.delete('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
     const position = request.userPosition
 
     listOrder.splice(position, 1)
@@ -118,13 +118,13 @@ app.delete('/users/:id', checkUserId, checkMethodOrUrl, (request, response) => {
 
     console.log(`[${method}] - ${url}`)
 
-    return response.status(204)
+    return response.status(204).json()
 })
 
 //Adiciona status para pronto ou encerrado
 app.patch('/order/:id', checkUserId, checkMethodOrUrl, (request, response) => {
     const position = request.userPosition
-    const id = request.userId
+    const id = request.orderId
 
     const changeStatus = listOrder.map(stats => {
 
